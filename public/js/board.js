@@ -82,48 +82,78 @@ function renderScoreboard() {
     </div>`).join('');
 }
 
+let currentMaxSteps = 0;
+
 function renderTracks() {
   const maxSteps = state.pathLength || 5;
   
-  tracksContainer.innerHTML = state.teams.slice(0, 2).map((t, i) => {
-    // Current progress percentage
-    const progress = Math.min(t.score, maxSteps) / maxSteps * 100;
-    
-    let cheeseStops = '';
-    for (let step = 1; step < maxSteps; step++) {
-      const left = (step / maxSteps) * 100;
-      const yOffset = Math.sin((left / 100) * Math.PI * 4) * 30; // percent
-      const eaten = t.score >= step;
-      cheeseStops += `<div class="cheese-stop" style="position:absolute; left:${left}%; top: calc(50% + ${yOffset}%); transform:translate(-50%, -50%) scale(${eaten?0:1}); opacity: ${eaten?0:1}; transition: all 0.5s ease; z-index:1;">🧀</div>`;
-    }
+  if (tracksContainer.children.length === 0 || currentMaxSteps !== maxSteps) {
+    currentMaxSteps = maxSteps;
+    tracksContainer.innerHTML = state.teams.slice(0, 2).map((t, i) => {
+      let cheeseStops = '';
+      for (let step = 1; step < maxSteps; step++) {
+        const left = (step / maxSteps) * 100;
+        const yOffset = Math.sin((left / 100) * Math.PI * 4) * 40; // percent
+        cheeseStops += `<div id="cheese-${i}-${step}" class="cheese-stop" style="position:absolute; left:${left}%; top: calc(50% + ${yOffset}%); transform:translate(-50%, -50%) scale(1); opacity: 1; transition: all 0.5s ease; z-index:1;"></div>`;
+      }
 
-    const cageOpen = t.score >= maxSteps;
-    const mouseY = Math.sin((progress / 100) * Math.PI * 4) * 30;
-    const isMyTurn = (i === state.currentTeam && state.lastOpened == null && !state.finished);
+      return `
+        <div class="track-wrapper">
+          <div class="track-header" style="color: var(--team${i === 0 ? 'A' : 'B'})">${escapeHtml(t.name)}</div>
+          <div class="track-path" id="track-path-${i}">
+            <svg width="100%" height="100%" style="position:absolute; top:0; left:0; z-index:0" preserveAspectRatio="none" viewBox="0 0 100 100">
+              <path d="M 0 50 Q 12.5 130, 25 50 T 50 50 T 75 50 T 100 50" fill="none" stroke="var(--line)" stroke-width="4" stroke-dasharray="8 8" vector-effect="non-scaling-stroke" />
+            </svg>
+            
+            ${cheeseStops}
+            
+            <div id="cage-${i}" class="cage-stop" style="position:absolute; left:100%; top:50%; transform:translate(-50%, -50%); z-index:2;">
+              <img src="/img/cheese.svg" alt="Cheese">
+            </div>
 
-    return `
-      <div class="track-wrapper">
-        <div class="track-header" style="color: var(--team${i === 0 ? 'A' : 'B'})">${escapeHtml(t.name)}</div>
-        <div class="track-path" id="track-path-${i}" style="position:relative; height:100px;">
-          <svg width="100%" height="100%" style="position:absolute; top:0; left:0; z-index:0" preserveAspectRatio="none" viewBox="0 0 100 100">
-            <path d="M 0 50 Q 12.5 110, 25 50 T 50 50 T 75 50 T 100 50" fill="none" stroke="var(--line)" stroke-width="3" stroke-dasharray="6" />
-          </svg>
-          
-          ${cheeseStops}
-          
-          <div class="cage-stop ${cageOpen ? 'open' : ''}" style="position:absolute; left:100%; top:50%; transform:translate(-50%, -50%); z-index:2;">
-            🐭
-          </div>
-
-          <div class="mouse-char ${i === 1 ? 'black-mouse' : ''} ${isMyTurn ? 'clickable-mouse' : ''}" id="mouse-${i}" 
-               style="left: ${progress}%; top: calc(50% + ${mouseY}%); transform: translate(-50%, -50%); transition: left 1s ease-in-out, top 1s ease-in-out;"
-               ${isMyTurn ? 'onclick="onMouseClick(event)"' : ''}>
-             🐁
+            <div class="mouse-char" id="mouse-${i}" 
+                 style="left: 0%; top: 50%; transform: translate(-50%, -50%);"
+                 onclick="onMouseClick(event)">
+               <img src="/img/mouse-${i === 0 ? 'white' : 'black'}.svg" alt="Mouse">
+            </div>
           </div>
         </div>
-      </div>
-    `;
-  }).join('');
+      `;
+    }).join('');
+    // Force reflow
+    tracksContainer.offsetHeight;
+  }
+
+  // Update DOM smartly
+  state.teams.slice(0, 2).forEach((t, i) => {
+    const progress = Math.min(t.score, maxSteps) / maxSteps * 100;
+    const mouseY = Math.sin((progress / 100) * Math.PI * 4) * 40;
+    const isMyTurn = (i === state.currentTeam && state.lastOpened == null && !state.finished);
+
+    const mouseEl = document.getElementById(`mouse-${i}`);
+    if (mouseEl) {
+      mouseEl.style.left = `${progress}%`;
+      mouseEl.style.top = `calc(50% + ${mouseY}%)`;
+      if (isMyTurn) mouseEl.classList.add('clickable-mouse');
+      else mouseEl.classList.remove('clickable-mouse');
+      mouseEl.style.pointerEvents = isMyTurn ? 'auto' : 'none';
+    }
+
+    const cageEl = document.getElementById(`cage-${i}`);
+    if (cageEl) {
+      if (t.score >= maxSteps) cageEl.classList.add('open');
+      else cageEl.classList.remove('open');
+    }
+
+    for (let step = 1; step < maxSteps; step++) {
+      const cheeseEl = document.getElementById(`cheese-${i}-${step}`);
+      if (cheeseEl) {
+        const eaten = t.score >= step;
+        cheeseEl.style.transform = `translate(-50%, -50%) scale(${eaten ? 0 : 1})`;
+        cheeseEl.style.opacity = eaten ? 0 : 1;
+      }
+    }
+  });
 }
 
 window.onMouseClick = (e) => {

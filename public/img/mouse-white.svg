@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 100">
+  <g>
+    <!-- Tail -->
+    <path d="M 32 65 Q 5 65 15 35 Q 20 20 35 15" fill="none" stroke="#fbcfe8" stroke-width="4" stroke-linecap="round" />
+    
+    <!-- Back Leg (Left) -->
+    <ellipse cx="90" cy="78" rx="8" ry="4" fill="#fbcfe8" stroke="#cbd5e1" stroke-width="2"/>
+    
+    <!-- Back Ear (Left) -->
+    <circle cx="100" cy="32" r="10" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="2"/>
+    
+    <!-- Body -->
+    <path d="M 40 75 C 20 75 20 35 60 35 C 90 35 130 55 135 68 C 135 75 100 75 40 75 Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="3" />
+    
+    <!-- Front Leg (Right) -->
+    <ellipse cx="105" cy="78" rx="8" ry="4" fill="#fbcfe8" stroke="#cbd5e1" stroke-width="2"/>
+    <ellipse cx="50" cy="78" rx="10" ry="5" fill="#fbcfe8" stroke="#cbd5e1" stroke-width="2"/>
+    
+    <!-- Front Ear (Right) -->
+    <circle cx="90" cy="35" r="13" fill="#ffffff" stroke="#cbd5e1" stroke-width="2"/>
+    <circle cx="90" cy="35" r="7" fill="#fbcfe8"/>
+    
+    <!-- Eye -->
+    <ellipse cx="112" cy="50" rx="3.5" ry="5.5" fill="#0f172a"/>
+    <circle cx="113" cy="48" r="1.5" fill="#ffffff"/>
+    
+    <!-- Nose -->
+    <circle cx="135" cy="68" r="4.5" fill="#f43f5e"/>
+    
+    <!-- Whiskers -->
+    <path d="M 132 70 L 150 68 M 132 72 L 152 74 M 130 74 L 145 80" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round"/>
+  </g>
+</svg>

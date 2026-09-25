@@ -85,55 +85,59 @@ a { color: var(--accent); text-decoration: none; font-weight: 700; }
 }
 
 /* ---------- Vocab Mice Tracks ---------- */
+.board-main { flex: 1; display: flex; flex-direction: column; padding: 20px; overflow: hidden; }
 .tracks-container {
-  display: flex; flex-direction: column; gap: 40px; width: 100%; max-width: 1400px; margin: 0 auto;
+  display: flex; flex-direction: column; gap: 30px; width: 100%; height: 100%; max-width: 1400px; margin: 0 auto;
 }
 .track-wrapper {
+  flex: 1;
   background: rgba(255, 255, 255, 0.4);
   border-radius: 20px; border: 2px dashed var(--line);
-  padding: 20px;
+  padding: 20px 40px;
   position: relative;
-  overflow: visible;
+  display: flex; flex-direction: column;
 }
-.track-header { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 15px; }
+.track-header { font-size: 26px; font-weight: 800; color: var(--text); margin-bottom: 10px; z-index: 10; position: relative;}
 .track-path {
-  display: flex; justify-content: space-between; align-items: center; position: relative;
-  height: 100px;
+  flex: 1;
+  position: relative;
+  display: flex; justify-content: space-between; align-items: center;
+  width: 100%;
 }
 .cheese-stop {
-  width: 50px; height: 50px; font-size: 30px; display: flex; align-items: center; justify-content: center;
-  background: white; border-radius: 50%; border: 3px solid #fcd34d; z-index: 2;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1); transition: transform 0.3s;
+  width: 30px; height: 30px; border-radius: 50%;
+  background: #ef4444; border: 4px solid #fff; z-index: 2;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: all 0.5s ease;
 }
 .cage-stop {
-  width: 70px; height: 70px; font-size: 40px; display: flex; align-items: center; justify-content: center;
-  background: #334155; border-radius: 20px; border: 4px solid #1e293b; z-index: 2;
-  position: relative;
+  width: 140px; height: 140px; display: flex; align-items: center; justify-content: center;
+  background: #334155; border-radius: 20px; border: 6px solid #1e293b; z-index: 2;
+  position: relative; padding: 20px;
 }
+.cage-stop img { width: 100%; height: 100%; object-fit: contain; }
 .cage-stop::after {
-  content: '🔒'; position: absolute; font-size: 24px; top: -10px; right: -10px;
+  content: '🔒'; position: absolute; font-size: 40px; top: -15px; right: -15px;
 }
 .cage-stop.open::after { content: '🔓'; }
 
 .mouse-char {
   position: absolute; top: 50%; left: 0; transform: translate(-50%, -50%);
-  font-size: 50px; z-index: 5;
+  width: 120px; height: 120px; z-index: 5; transition: left 1s ease-in-out, top 1s ease-in-out;
 }
-.black-mouse {
-  filter: invert(1) hue-rotate(180deg) brightness(0.2);
-}
+.mouse-char img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3)); }
+
 .clickable-mouse {
   cursor: pointer;
   animation: pulse-mouse 1.5s infinite;
 }
 @keyframes pulse-mouse {
   0% { filter: drop-shadow(0 0 0px var(--accent)); }
-  50% { filter: drop-shadow(0 0 20px var(--accent)); }
+  50% { filter: drop-shadow(0 0 30px var(--accent)); }
   100% { filter: drop-shadow(0 0 0px var(--accent)); }
 }
 
 .cat-attack {
-  position: absolute; top: 50%; transform: translateY(-50%); font-size: 60px; z-index: 10;
+  position: absolute; top: 50%; transform: translateY(-50%); font-size: 80px; z-index: 10;
   animation: catAttack 1.5s ease forwards;
 }
 

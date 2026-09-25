@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <g transform="translate(10, 15)">
+    <!-- Cheese Body -->
+    <path d="M0,60 L10,10 L70,30 L80,70 Z" fill="#fde047" stroke="#eab308" stroke-width="4" stroke-linejoin="round"/>
+    <!-- Cheese Side (Depth) -->
+    <path d="M0,60 L10,75 L80,70" fill="none" stroke="#ca8a04" stroke-width="4" stroke-linejoin="round"/>
+    <!-- Holes -->
+    <circle cx="25" cy="40" r="6" fill="#ca8a04"/>
+    <circle cx="50" cy="55" r="8" fill="#ca8a04"/>
+    <circle cx="65" cy="40" r="5" fill="#ca8a04"/>
+    <ellipse cx="15" cy="25" rx="4" ry="6" fill="#ca8a04" transform="rotate(30 15 25)"/>
+    <circle cx="45" cy="25" r="4" fill="#ca8a04"/>
+  </g>
+</svg>
