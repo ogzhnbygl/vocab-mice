@@ -1,0 +1,20 @@
+{
+  "name": "vocab-mice",
+  "version": "1.0.0",
+  "description": "Vocab Mice - Classroom English vocab game for smartboards",
+  "type": "module",
+  "scripts": {
+    "dev": "node dev.js",
+    "test": "node --test test/game.test.mjs",
+    "test:integration": "node --test test/integration.test.mjs"
+  },
+  "engines": {
+    "node": "24.x"
+  },
+  "dependencies": {
+    "mongodb": "^6.8.0"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^9.4.0"
+  }
+}

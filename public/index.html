@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vocab Mice — Katıl</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="wrap" style="max-width:480px; padding-top:8vh;">
+    <div class="panel" style="text-align:center;">
+      <div style="margin-bottom: 4px;"><img src="/logo.jpg" alt="Vocab Mice Logo" style="width: 180px; mix-blend-mode: multiply;"></div>
+      <h1 style="margin:8px 0; color: #ec4899;">Vocab Mice</h1>
+      <p class="muted">Öğretmeninden aldığın kodu gir, sonra rolünü seç.</p>
+      <div class="form-row" style="margin-top:24px;">
+        <input type="text" id="code-input" class="big-code" placeholder="OYUN KODU" maxlength="4" style="width: 100%; text-align: center; padding: 24px; border: 3px solid var(--line); border-radius: 16px; background: var(--bg2); margin-top: 10px; outline: none;">
+      </div>
+      <div id="join-error" style="color:var(--danger); min-height:22px; margin:6px 0;"></div>
+      <div class="judge-row" style="margin-top:16px; gap:16px;">
+        <button class="btn btn-board" id="board-btn" style="flex:1; padding:20px; font-size:20px; border-radius:16px;">🖥️ Akıllı Tahta</button>
+        <button class="btn btn-moderate" id="moderate-btn" style="flex:1; padding:20px; font-size:20px; border-radius:16px;">📱 Moderatör</button>
+      </div>
+      <p class="hint" style="margin-top:18px;"><a href="/login.html" class="btn">👨‍🏫 Öğretmen Girişi</a></p>
+    </div>
+  </main>
+  <script src="/js/common.js"></script>
+  <script src="/js/join.js"></script>
+</body>
+</html>

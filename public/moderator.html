@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vocab Mice — Moderatör</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1 id="game-name">…</h1>
+    <span class="code-chip">KOD: <b id="code">—</b></span>
+  </header>
+
+  <main class="mod-wrap">
+    <div id="start-screen" style="display:none; text-align:center; padding-top:60px;">
+      <h2 style="color:var(--text); margin-bottom:20px;">Sınıf Hazır Olduğunda...</h2>
+      <button id="btn-start-game" class="btn btn-board" style="font-size:24px; padding:20px 40px; border-radius:100px;">▶ Oyunu Başlat</button>
+    </div>
+
+    <div id="mod-content" style="display:none;">
+      <div class="mod-scoreboard" id="scoreboard"></div>
+
+      <button class="btn btn-primary" id="open-next" style="width:100%; margin: 10px 0; font-size:18px;">📸 Sıradaki Soruyu Göster</button>
+      <div class="open-hint" id="open-hint">Sıradaki soru için yukarıdaki butona bas...</div>
+
+      <div class="judge-row">
+        <button class="btn btn-ok" id="judge-correct">✓ Doğru</button>
+        <button class="btn btn-danger" id="judge-incorrect">✗ Yanlış</button>
+      </div>
+
+      <div class="ctrl-row">
+        <button class="btn" id="next-team">Sıradaki grup →</button>
+        <button class="btn" id="reset">🔄 Oyunu sıfırla</button>
+        <button class="btn btn-board" id="finish">🏁 Oyunu bitir</button>
+      </div>
+
+      <div class="log" id="log"></div>
+    </div>
+  </main>
+
+  <div class="overlay" id="banner" hidden>
+    <div class="overlay-card">
+      <div class="overlay-icon">🏆</div>
+      <h2 id="banner-title">Oyun bitti!</h2>
+      <p id="banner-text"></p>
+      <button id="banner-close" class="btn btn-primary">Kapat</button>
+    </div>
+  </div>
+
+  <script src="/js/common.js"></script>
+  <script src="/js/moderator.js"></script>
+</body>
+</html>
