@@ -8,7 +8,7 @@ const questionImg = document.getElementById('question-img');
 let state = null;
 let lastSeq = null;
 
-const MOUSE_EMOJIS = ['🐁', '🐭'];
+const MOUSE_EMOJIS = ['🐁', '🐁'];
 
 function onState(s) {
   const prev = state;
@@ -83,7 +83,7 @@ function renderScoreboard() {
 }
 
 function renderTracks() {
-  const maxSteps = Math.max(5, Math.ceil(state.envelopes.length / 2));
+  const maxSteps = state.pathLength || 5;
   
   tracksContainer.innerHTML = state.teams.slice(0, 2).map((t, i) => {
     // Current progress percentage
@@ -92,34 +92,48 @@ function renderTracks() {
     let cheeseStops = '';
     for (let step = 1; step < maxSteps; step++) {
       const left = (step / maxSteps) * 100;
-      cheeseStops += `<div class="cheese-stop" style="position:absolute; left:${left}%; transform:translateX(-50%)">🧀</div>`;
+      const yOffset = Math.sin((left / 100) * Math.PI * 4) * 30; // percent
+      const eaten = t.score >= step;
+      cheeseStops += `<div class="cheese-stop" style="position:absolute; left:${left}%; top: calc(50% + ${yOffset}%); transform:translate(-50%, -50%) scale(${eaten?0:1}); opacity: ${eaten?0:1}; transition: all 0.5s ease; z-index:1;">🧀</div>`;
     }
 
     const cageOpen = t.score >= maxSteps;
+    const mouseY = Math.sin((progress / 100) * Math.PI * 4) * 30;
+    const isMyTurn = (i === state.currentTeam && state.lastOpened == null && !state.finished);
 
     return `
       <div class="track-wrapper">
         <div class="track-header" style="color: var(--team${i === 0 ? 'A' : 'B'})">${escapeHtml(t.name)}</div>
-        <div class="track-path" id="track-path-${i}">
-          <div class="track-line"></div>
+        <div class="track-path" id="track-path-${i}" style="position:relative; height:100px;">
+          <svg width="100%" height="100%" style="position:absolute; top:0; left:0; z-index:0" preserveAspectRatio="none" viewBox="0 0 100 100">
+            <path d="M 0 50 Q 12.5 110, 25 50 T 50 50 T 75 50 T 100 50" fill="none" stroke="var(--line)" stroke-width="3" stroke-dasharray="6" />
+          </svg>
           
-          <div class="cheese-stop" style="position:absolute; left:0; transform:translateX(-50%); opacity:0;"></div>
           ${cheeseStops}
           
-          <div class="cage-stop ${cageOpen ? 'open' : ''}" style="position:absolute; left:100%; transform:translateX(-50%)">
-            ${cageOpen ? '🐭' : '🐭'}
+          <div class="cage-stop ${cageOpen ? 'open' : ''}" style="position:absolute; left:100%; top:50%; transform:translate(-50%, -50%); z-index:2;">
+            🐭
           </div>
 
-          <div class="mouse-char" id="mouse-${i}" style="left: ${progress}%">${MOUSE_EMOJIS[i] || '🐭'}</div>
+          <div class="mouse-char ${i === 1 ? 'black-mouse' : ''} ${isMyTurn ? 'clickable-mouse' : ''}" id="mouse-${i}" 
+               style="left: ${progress}%; top: calc(50% + ${mouseY}%); transform: translate(-50%, -50%); transition: left 1s ease-in-out, top 1s ease-in-out;"
+               ${isMyTurn ? 'onclick="onMouseClick(event)"' : ''}>
+             🐁
+          </div>
         </div>
       </div>
     `;
   }).join('');
 }
 
+window.onMouseClick = (e) => {
+  e.preventDefault();
+  roomAction(code, { action: 'open-next' }).catch(() => {});
+};
+
 function renderQuestion() {
   if (state.lastOpened != null) {
-    const env = state.envelopes[state.lastOpened];
+    const env = state.questions[state.lastOpened];
     questionImg.src = env.imageId ? `/api/images/${env.imageId}` : '';
     questionImg.style.display = env.imageId ? 'block' : 'none';
     if (!env.imageId) {

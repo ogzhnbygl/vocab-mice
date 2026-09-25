@@ -1,5 +1,5 @@
 import { getDb } from '../../lib/db.js';
-import { buildRoom, publicRoom, openEnvelope, openNext, judge, nextTeam, finish } from '../../lib/game.js';
+import { buildRoom, publicRoom, openQuestion, openNext, judge, nextTeam, finish } from '../../lib/game.js';
 
 export default async function handler(req, res) {
   try {
@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
       const { action, index, outcome } = req.body || {};
       let event = null;
-      if (action === 'open-envelope') event = openEnvelope(room, index).action;
+      if (action === 'open-question') event = openQuestion(room, index).action;
       else if (action === 'open-next') event = openNext(room).action;
       else if (action === 'judge') event = judge(room, outcome).action;
       else if (action === 'next-team') event = nextTeam(room).action;

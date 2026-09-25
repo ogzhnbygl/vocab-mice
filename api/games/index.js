@@ -1,6 +1,6 @@
 import { getDb } from '../../lib/db.js';
 import { getSessionUser } from '../../lib/auth.js';
-import { genId, uniqueCode, clampInt, normalizeTeams, summarizeGame, sanitizeEnvelopes, resizeEnvelopes } from '../../lib/game.js';
+import { genId, uniqueCode, clampInt, normalizeTeams, summarizeGame, sanitizeQuestions, resizeQuestions } from '../../lib/game.js';
 
 export default async function handler(req, res) {
   try {
@@ -16,12 +16,13 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      const { name, teams, envelopeCount, envelopes } = req.body || {};
-      const count = clampInt(envelopeCount, 12, 2, 24);
+      const { name, teams, questionCount, pathLength, questions } = req.body || {};
+      const count = clampInt(questionCount, 12, 2, 50);
+      const targetPathLength = clampInt(pathLength, 5, 1, 20);
       
-      let finalEnvelopes = sanitizeEnvelopes(envelopes);
-      if (finalEnvelopes.length !== count) {
-        finalEnvelopes = resizeEnvelopes(finalEnvelopes, count);
+      let finalQuestions = sanitizeQuestions(questions);
+      if (finalQuestions.length !== count) {
+        finalQuestions = resizeQuestions(finalQuestions, count);
       }
 
       const game = {
@@ -30,8 +31,8 @@ export default async function handler(req, res) {
         code: await uniqueCode(games),
         name: String(name || 'Yeni Oyun').slice(0, 100),
         teams: normalizeTeams(teams),
-        envelopeCount: count,
-        envelopes: finalEnvelopes,
+        questionCount: count,
+        questions: finalQuestions,
         createdAt: new Date().toISOString(),
       };
       await games.insertOne(game);

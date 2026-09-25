@@ -1,6 +1,6 @@
 import { getDb } from '../../lib/db.js';
 import { getSessionUser } from '../../lib/auth.js';
-import { clampInt, normalizeTeams, sanitizeEnvelopes, resizeEnvelopes } from '../../lib/game.js';
+import { clampInt, normalizeTeams, sanitizeQuestions, resizeQuestions } from '../../lib/game.js';
 
 export default async function handler(req, res) {
   try {
@@ -20,13 +20,14 @@ export default async function handler(req, res) {
     if (req.method === 'PUT') {
       const g = await games.findOne({ id, userId: user.id });
       if (!g) return res.status(404).json({ error: 'not_found' });
-      const { name, teams, envelopes, envelopeCount } = req.body || {};
+      const { name, teams, questions, questionCount, pathLength } = req.body || {};
       if (name !== undefined) g.name = String(name).slice(0, 100);
       if (teams !== undefined) g.teams = normalizeTeams(teams);
-      if (envelopes !== undefined) g.envelopes = sanitizeEnvelopes(envelopes);
-      if (envelopeCount !== undefined) g.envelopeCount = clampInt(envelopeCount, 12, 2, 24);
-      if (g.envelopes.length !== g.envelopeCount) {
-        g.envelopes = resizeEnvelopes(g.envelopes, g.envelopeCount);
+      if (questions !== undefined) g.questions = sanitizeQuestions(questions);
+      if (questionCount !== undefined) g.questionCount = clampInt(questionCount, 12, 2, 50);
+      if (pathLength !== undefined) g.pathLength = clampInt(pathLength, 5, 1, 20);
+      if (g.questions.length !== g.questionCount) {
+        g.questions = resizeQuestions(g.questions, g.questionCount);
       }
       g.updatedAt = new Date().toISOString();
       await games.replaceOne({ id }, g);
@@ -35,8 +36,8 @@ export default async function handler(req, res) {
       if (room) {
         room.name = g.name;
         room.teams.forEach((t, i) => { if (g.teams[i]) t.name = g.teams[i].name; });
-        room.envelopes = g.envelopes.map((e, i) => {
-          const old = room.envelopes[i];
+        room.questions = g.questions.map((e, i) => {
+          const old = room.questions[i];
           return {
             id: e.id, type: e.type, imageId: e.imageId, points: Number(e.points) || 0,
             revealed: old ? old.revealed : false,

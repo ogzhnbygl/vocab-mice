@@ -21,7 +21,6 @@ function onState(s) {
 
 function handleAction(a) {
   if (a.type === 'open') { log(`Soru #${a.index + 1} açıldı`); vibrate(60); }
-  else if (a.type === 'tornado') { log(`🌪️ ${teamName(a.teamIndex)} — tüm puanlar silindi!`); vibrate([200, 100, 200]); }
   else if (a.type === 'judge') {
     log(`${teamName(a.teamIndex)} ${a.outcome === 'correct' ? 'doğru ✓ (+' + a.points + ')' : 'yanlış ✗ (−' + a.points + ')'}`);
     vibrate(a.outcome === 'correct' ? 80 : [120, 60, 120]);
@@ -55,7 +54,7 @@ function render() {
   document.getElementById('open-next').style.display = open ? 'none' : 'block';
   openHint.textContent = open
     ? `Soru #${state.lastOpened + 1} açık — cevabı değerlendir`
-    : 'Sıradaki soruyu göstermek için butona bas…';
+    : 'Öğrencinin tahtadan fareye tıklamasını bekle (ya da sen göster)';
 }
 
 function teamName(i) {

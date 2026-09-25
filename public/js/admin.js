@@ -3,7 +3,7 @@ const $ = (sel) => document.querySelector(sel);
 let games = [];
 let images = [];
 let editingId = null;
-let envelopes = [];
+let questions = [];
 let currentUser = null;
 
 // Auth Check
@@ -24,10 +24,10 @@ document.getElementById('logout-btn').addEventListener('click', () => {
 const gamesList = $('#games-list');
 const imagesGrid = $('#images-grid');
 const editor = $('#editor');
-const envelopeList = $('#envelope-list');
+const questionList = $('#question-list');
 const success = $('#success');
 
-function defaultEnvelopes(n) {
+function defaultQuestions(n) {
   return Array.from({ length: n }, () => ({
     id: crypto.randomUUID ? crypto.randomUUID() : String(Math.random()),
     type: 'image', imageId: null, points: 100,
@@ -42,7 +42,7 @@ async function loadGames() {
 async function loadImages() {
   images = await api('GET', '/api/images');
   renderImages();
-  if (!editor.classList.contains('hidden')) renderEnvelopes();
+  if (!editor.classList.contains('hidden')) renderQuestions();
 }
 
 // ---------- oyun listesi ----------
@@ -55,7 +55,7 @@ function renderGames() {
     <div class="game-card">
       <div class="gname">${escapeHtml(g.name)}</div>
       <div class="gcode">${g.code}</div>
-      <div class="muted" style="font-size:13px;">${g.envelopeCount} soru</div>
+      <div class="muted" style="font-size:13px;">Havuz: ${g.questionCount} soru | Hedef: ${g.pathLength || 5} adım</div>
       <div class="actions">
         <a class="btn btn-sm btn-board" href="/board/${g.code}" target="_blank">Tahta</a>
         <a class="btn btn-sm btn-moderate" href="/moderate/${g.code}" target="_blank">Moderatör</a>
@@ -198,32 +198,32 @@ $('#upload-drop').addEventListener('drop', async (e) => {
 });
 
 // ---------- zarf düzenleyici ----------
-function renderEnvelopes() {
-  envelopeList.innerHTML = '';
-  envelopes.forEach((env, i) => {
+function renderQuestions() {
+  questionList.innerHTML = '';
+  questions.forEach((env, i) => {
     const row = document.createElement('div');
-    row.className = 'env-row';
+    row.className = 'qst-row';
     row.innerHTML = `
-      <div class="env-index">${i + 1}</div>
-      <div class="env-picker" data-i="${i}">
+      <div class="qst-index">${i + 1}</div>
+      <div class="qst-picker" data-i="${i}">
         ${env.imageId ? `
-          <div class="thumb env-pick-btn" data-i="${i}" style="border-color:var(--ok);" title="Değiştir">
+          <div class="thumb qst-pick-btn" data-i="${i}" style="border-color:var(--ok);" title="Değiştir">
             <img src="/api/images/${env.imageId}" alt="">
           </div>
         ` : `
-          <button type="button" class="btn btn-sm btn-primary env-pick-btn" data-i="${i}">🖼️ Soru Görseli Seç</button>
+          <button type="button" class="btn btn-sm btn-primary qst-pick-btn" data-i="${i}">🖼️ Soru Görseli Seç</button>
         `}
       </div>`;
-    envelopeList.appendChild(row);
+    questionList.appendChild(row);
   });
 }
 
-let pickingForEnvelope = null;
+let pickingForQuestion = null;
 
-envelopeList.addEventListener('click', (e) => {
-  const pickBtn = e.target.closest('.env-pick-btn');
+questionList.addEventListener('click', (e) => {
+  const pickBtn = e.target.closest('.qst-pick-btn');
   if (pickBtn) {
-    pickingForEnvelope = +pickBtn.dataset.i;
+    pickingForQuestion = +pickBtn.dataset.i;
     renderModalImages();
     $('#image-modal').classList.remove('hidden');
   }
@@ -246,10 +246,10 @@ function renderModalImages() {
 
 $('#modal-images-grid').addEventListener('click', (e) => {
   const tile = e.target.closest('.img-tile[data-img]');
-  if (tile && pickingForEnvelope !== null) {
-    envelopes[pickingForEnvelope].imageId = tile.dataset.img;
-    envelopes[pickingForEnvelope].type = 'image';
-    renderEnvelopes();
+  if (tile && pickingForQuestion !== null) {
+    questions[pickingForQuestion].imageId = tile.dataset.img;
+    questions[pickingForQuestion].type = 'image';
+    renderQuestions();
     $('#image-modal').classList.add('hidden');
   }
 });
@@ -259,10 +259,10 @@ $('#modal-image-input').addEventListener('change', async (e) => {
     const created = await uploadFiles(e.target.files);
     e.target.value = '';
     await loadImages();
-    if (pickingForEnvelope !== null && created.length) {
-      envelopes[pickingForEnvelope].imageId = created[0].id;
-      envelopes[pickingForEnvelope].type = 'image';
-      renderEnvelopes();
+    if (pickingForQuestion !== null && created.length) {
+      questions[pickingForQuestion].imageId = created[0].id;
+      questions[pickingForQuestion].type = 'image';
+      renderQuestions();
       $('#image-modal').classList.add('hidden');
     } else {
       renderModalImages();
@@ -277,13 +277,14 @@ function openEditor(game) {
   $('#game-name-input').value = game ? game.name : '';
   $('#team-a-name').value = game && game.teams[0] ? game.teams[0].name : 'Grup A';
   $('#team-b-name').value = game && game.teams[1] ? game.teams[1].name : 'Grup B';
-  $('#envelope-count').value = game ? game.envelopeCount : 12;
-  envelopes = game ? JSON.parse(JSON.stringify(game.envelopes)) : defaultEnvelopes(12);
+  $('#question-count').value = game ? game.questionCount : 12;
+  $('#path-length').value = game ? (game.pathLength || 5) : 5;
+  questions = game ? JSON.parse(JSON.stringify(game.questions)) : defaultQuestions(12);
   $('#games-section').classList.add('hidden');
   $('#images-section').classList.add('hidden');
   success.classList.add('hidden');
   editor.classList.remove('hidden');
-  renderEnvelopes();
+  renderQuestions();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -295,12 +296,12 @@ $('#new-game').addEventListener('click', () => openEditor(null));
 $('#cancel-edit').addEventListener('click', closeEditor);
 $('#success-done').addEventListener('click', closeEditor);
 
-$('#envelope-count').addEventListener('change', () => {
-  const n = Math.min(24, Math.max(2, Number($('#envelope-count').value) || 12));
-  $('#envelope-count').value = n;
-  while (envelopes.length < n) envelopes.push({ id: crypto.randomUUID ? crypto.randomUUID() : String(Math.random()), type: 'image', imageId: null, points: 100 });
-  envelopes.length = n;
-  renderEnvelopes();
+$('#question-count').addEventListener('change', () => {
+  const n = Math.min(50, Math.max(2, Number($('#question-count').value) || 12));
+  $('#question-count').value = n;
+  while (questions.length < n) questions.push({ id: crypto.randomUUID ? crypto.randomUUID() : String(Math.random()), type: 'image', imageId: null, points: 1 });
+  questions.length = n;
+  renderQuestions();
 });
 
 $('#save-game').addEventListener('click', async () => {
@@ -310,8 +311,9 @@ $('#save-game').addEventListener('click', async () => {
       { name: $('#team-a-name').value.trim() || 'Grup A' },
       { name: $('#team-b-name').value.trim() || 'Grup B' },
     ],
-    envelopeCount: envelopes.length,
-    envelopes: envelopes.map((e) => ({ id: e.id, type: e.type, imageId: e.imageId, points: e.points })),
+    questionCount: questions.length,
+    pathLength: parseInt($('#path-length').value, 10) || 5,
+    questions: questions.map((e) => ({ id: e.id, type: e.type, imageId: e.imageId, points: 1 })),
   };
   let game;
   if (editingId) game = await api('PUT', '/api/games/' + editingId, payload);
