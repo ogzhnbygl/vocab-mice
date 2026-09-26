@@ -3,7 +3,7 @@ const $ = (sel) => document.querySelector(sel);
 let games = [];
 let images = [];
 let editingId = null;
-let questions = [];
+let selectedImageIds = new Set();
 let currentUser = null;
 
 // Auth Check
@@ -24,15 +24,7 @@ document.getElementById('logout-btn').addEventListener('click', () => {
 const gamesList = $('#games-list');
 const imagesGrid = $('#images-grid');
 const editor = $('#editor');
-const questionList = $('#question-list');
 const success = $('#success');
-
-function defaultQuestions(n) {
-  return Array.from({ length: n }, () => ({
-    id: crypto.randomUUID ? crypto.randomUUID() : String(Math.random()),
-    type: 'image', imageId: null, points: 100,
-  }));
-}
 
 // ---------- veri yükleme ----------
 async function loadGames() {
@@ -42,7 +34,7 @@ async function loadGames() {
 async function loadImages() {
   images = await api('GET', '/api/images');
   renderImages();
-  if (!editor.classList.contains('hidden')) renderQuestions();
+  if (!editor.classList.contains('hidden')) renderGameImages();
 }
 
 // ---------- oyun listesi ----------
@@ -198,75 +190,41 @@ $('#upload-drop').addEventListener('drop', async (e) => {
 });
 
 // ---------- zarf düzenleyici ----------
-function renderQuestions() {
-  questionList.innerHTML = '';
-  questions.forEach((env, i) => {
-    const row = document.createElement('div');
-    row.className = 'qst-row';
-    row.innerHTML = `
-      <div class="qst-index">${i + 1}</div>
-      <div class="qst-picker" data-i="${i}">
-        ${env.imageId ? `
-          <div class="thumb qst-pick-btn" data-i="${i}" style="border-color:var(--ok);" title="Değiştir">
-            <img src="/api/images/${env.imageId}" alt="">
-          </div>
-        ` : `
-          <button type="button" class="btn btn-sm btn-primary qst-pick-btn" data-i="${i}">🖼️ Soru Görseli Seç</button>
-        `}
-      </div>`;
-    questionList.appendChild(row);
-  });
-}
-
-let pickingForQuestion = null;
-
-questionList.addEventListener('click', (e) => {
-  const pickBtn = e.target.closest('.qst-pick-btn');
-  if (pickBtn) {
-    pickingForQuestion = +pickBtn.dataset.i;
-    renderModalImages();
-    $('#image-modal').classList.remove('hidden');
-  }
-});
-
-// Modal işlemleri
-$('#close-modal').addEventListener('click', () => $('#image-modal').classList.add('hidden'));
-
-function renderModalImages() {
-  const grid = $('#modal-images-grid');
+function renderGameImages() {
+  const grid = $('#game-images-grid');
   if (images.length === 0) {
     grid.innerHTML = '<p class="muted">Galeri boş. Yeni görsel yükleyin.</p>';
     return;
   }
-  grid.innerHTML = images.map((img) => `
-    <div class="img-tile" data-img="${img.id}" style="cursor:pointer;" title="${escapeHtml(img.originalName)}">
-      <img src="/api/images/${img.id}" alt="">
-    </div>`).join('');
+  grid.innerHTML = images.map((img) => {
+    const isSelected = selectedImageIds.has(img.id);
+    return `
+      <div class="img-tile ${isSelected ? 'selected' : ''}" data-pick-img="${img.id}" style="cursor:pointer; border: ${isSelected ? '4px solid var(--ok)' : '2px solid transparent'}; box-sizing: border-box; transform: ${isSelected ? 'scale(0.95)' : 'none'}; transition: all 0.2s;" title="${escapeHtml(img.originalName)}">
+        <img src="/api/images/${img.id}" alt="">
+        ${isSelected ? '<div style="position:absolute; top:4px; right:4px; background:var(--ok); color:white; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; font-weight:bold;">✓</div>' : ''}
+      </div>`;
+  }).join('');
+  
+  $('#question-count').value = selectedImageIds.size;
 }
 
-$('#modal-images-grid').addEventListener('click', (e) => {
-  const tile = e.target.closest('.img-tile[data-img]');
-  if (tile && pickingForQuestion !== null) {
-    questions[pickingForQuestion].imageId = tile.dataset.img;
-    questions[pickingForQuestion].type = 'image';
-    renderQuestions();
-    $('#image-modal').classList.add('hidden');
+$('#game-images-grid').addEventListener('click', (e) => {
+  const tile = e.target.closest('[data-pick-img]');
+  if (tile) {
+    const id = tile.dataset.pickImg;
+    if (selectedImageIds.has(id)) selectedImageIds.delete(id);
+    else selectedImageIds.add(id);
+    renderGameImages();
   }
 });
 
-$('#modal-image-input').addEventListener('change', async (e) => {
+$('#game-image-input').addEventListener('change', async (e) => {
   if (e.target.files.length) {
     const created = await uploadFiles(e.target.files);
     e.target.value = '';
     await loadImages();
-    if (pickingForQuestion !== null && created.length) {
-      questions[pickingForQuestion].imageId = created[0].id;
-      questions[pickingForQuestion].type = 'image';
-      renderQuestions();
-      $('#image-modal').classList.add('hidden');
-    } else {
-      renderModalImages();
-    }
+    created.forEach(img => selectedImageIds.add(img.id));
+    renderGameImages();
   }
 });
 
@@ -277,14 +235,20 @@ function openEditor(game) {
   $('#game-name-input').value = game ? game.name : '';
   $('#team-a-name').value = game && game.teams[0] ? game.teams[0].name : 'Grup A';
   $('#team-b-name').value = game && game.teams[1] ? game.teams[1].name : 'Grup B';
-  $('#question-count').value = game ? game.questionCount : 12;
   $('#path-length').value = game ? (game.pathLength || 5) : 5;
-  questions = game ? JSON.parse(JSON.stringify(game.questions)) : defaultQuestions(12);
+  
+  selectedImageIds = new Set();
+  if (game && game.questions) {
+    game.questions.forEach(q => {
+      if (q.imageId) selectedImageIds.add(q.imageId);
+    });
+  }
+  
   $('#games-section').classList.add('hidden');
   $('#images-section').classList.add('hidden');
   success.classList.add('hidden');
   editor.classList.remove('hidden');
-  renderQuestions();
+  renderGameImages();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -296,24 +260,28 @@ $('#new-game').addEventListener('click', () => openEditor(null));
 $('#cancel-edit').addEventListener('click', closeEditor);
 $('#success-done').addEventListener('click', closeEditor);
 
-$('#question-count').addEventListener('change', () => {
-  const n = Math.min(50, Math.max(2, Number($('#question-count').value) || 12));
-  $('#question-count').value = n;
-  while (questions.length < n) questions.push({ id: crypto.randomUUID ? crypto.randomUUID() : String(Math.random()), type: 'image', imageId: null, points: 1 });
-  questions.length = n;
-  renderQuestions();
-});
-
 $('#save-game').addEventListener('click', async () => {
+  if (selectedImageIds.size < 2) {
+    alert('Lütfen oyun için en az 2 görsel seçin.');
+    return;
+  }
+  
+  const questionsPayload = Array.from(selectedImageIds).map(imageId => ({
+    id: crypto.randomUUID ? crypto.randomUUID() : String(Math.random()),
+    type: 'image',
+    imageId: imageId,
+    points: 1
+  }));
+
   const payload = {
     name: $('#game-name-input').value.trim() || 'Yeni Oyun',
     teams: [
       { name: $('#team-a-name').value.trim() || 'Grup A' },
       { name: $('#team-b-name').value.trim() || 'Grup B' },
     ],
-    questionCount: questions.length,
+    questionCount: questionsPayload.length,
     pathLength: parseInt($('#path-length').value, 10) || 5,
-    questions: questions.map((e) => ({ id: e.id, type: e.type, imageId: e.imageId, points: 1 })),
+    questions: questionsPayload,
   };
   let game;
   if (editingId) game = await api('PUT', '/api/games/' + editingId, payload);

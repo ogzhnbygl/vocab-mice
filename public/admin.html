@@ -68,8 +68,8 @@
         </div>
         <div style="display:flex; gap:12px;">
           <div class="form-row" style="max-width:200px; flex:1;">
-            <label>Soru havuzu (2–50)</label>
-            <input type="number" id="question-count" min="2" max="50" value="12">
+            <label>Seçilen Görsel Sayısı</label>
+            <input type="number" id="question-count" readonly value="0" style="background:var(--bg); border:none; pointer-events:none; font-weight:bold;">
           </div>
           <div class="form-row" style="max-width:200px; flex:1;">
             <label>Kazanma Hedefi (Adım)</label>
@@ -77,9 +77,15 @@
           </div>
         </div>
 
-        <h2 style="margin-top:8px;">Sorular</h2>
-        <p class="hint">Her doğru cevap fareyi 1 adım ilerletir.</p>
-        <div id="question-list"></div>
+        <h2 style="margin-top:16px;">Oyun Görselleri</h2>
+        <p class="hint">Bu oyunda rastgele sorulacak görselleri işaretleyin (Çoklu seçim). İsterseniz yeni yükleyebilirsiniz.</p>
+        
+        <label class="upload-drop" style="margin-bottom: 16px; padding: 12px; font-size: 14px;">
+          📁 Yeni Görsel Yükle (Otomatik Seçilir)
+          <input type="file" id="game-image-input" accept="image/*" multiple hidden>
+        </label>
+
+        <div class="images-grid" id="game-images-grid" style="max-height: 400px; overflow-y: auto; padding: 10px; border: 1px solid var(--line); border-radius: 12px; background: rgba(0,0,0,0.02);"></div>
 
         <div style="display:flex; gap:12px; margin-top:16px;">
           <button class="btn btn-primary" id="save-game">💾 Kaydet</button>
@@ -106,20 +112,6 @@
       </div>
     </section>
 
-    <!-- GÖRSEL SEÇME MODALI -->
-    <div id="image-modal" class="overlay hidden">
-      <div class="overlay-card" style="width: 90vw; max-width: 500px; max-height: 85vh; overflow-y: auto; text-align: left; padding: 24px;">
-        <h2 style="margin-top:0;">Görsel Seç</h2>
-        <div class="images-grid" id="modal-images-grid" style="margin-bottom: 16px;"></div>
-        <label class="upload-drop" style="margin-bottom: 16px;">
-          📁 Yeni Görsel Yükle
-          <input type="file" id="modal-image-input" accept="image/*" multiple hidden>
-        </label>
-        <div style="text-align: right;">
-          <button class="btn btn-ghost" id="close-modal">Kapat</button>
-        </div>
-      </div>
-    </div>
   </main>
 
   <script src="/js/common.js"></script>
