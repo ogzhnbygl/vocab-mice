@@ -163,12 +163,12 @@ async function playWinAnimation(teamIndex, heroEl, cageEl) {
   await new Promise(r => setTimeout(r, 800));
   
   heroEl.style.transition = 'left 0.6s ease-out, top 0.6s ease-out';
-  heroEl.style.left = 'calc(100% - 80px)';
+  heroEl.style.left = 'calc(100% - 160px)';
   heroEl.style.top = '50%';
   
   if (friendImg) {
     friendImg.style.transition = 'transform 0.6s ease-out';
-    friendImg.style.transform = 'translateX(-60px) scaleX(-1)';
+    friendImg.style.transform = 'translateX(-40px) scaleX(-1)';
   }
   
   await new Promise(r => setTimeout(r, 600));
@@ -177,7 +177,7 @@ async function playWinAnimation(teamIndex, heroEl, cageEl) {
   heart.className = 'win-heart';
   heart.textContent = '❤️';
   heart.style.position = 'absolute';
-  heart.style.left = 'calc(100% - 40px)';
+  heart.style.left = 'calc(100% - 100px)';
   heart.style.top = '40%';
   heart.style.fontSize = '40px';
   heart.style.transform = 'translate(-50%, -50%) scale(0)';
@@ -301,13 +301,13 @@ function renderTracks() {
           if (isImmediate) {
             cageEl.classList.add('open');
             if (mouseEl) {
-              mouseEl.style.left = 'calc(100% - 80px)';
+              mouseEl.style.left = 'calc(100% - 160px)';
               mouseEl.style.top = '50%';
               mouseEl.classList.add('win-jump');
             }
             const friendImg = cageEl.querySelector('img');
             if (friendImg) {
-              friendImg.style.transform = 'translateX(-60px) scaleX(-1)';
+              friendImg.style.transform = 'translateX(-40px) scaleX(-1)';
               friendImg.classList.add('win-jump');
             }
             
@@ -315,7 +315,7 @@ function renderTracks() {
             heart.className = 'win-heart';
             heart.textContent = '❤️';
             heart.style.position = 'absolute';
-            heart.style.left = 'calc(100% - 40px)';
+            heart.style.left = 'calc(100% - 100px)';
             heart.style.top = '40%';
             heart.style.fontSize = '40px';
             heart.style.transform = 'translate(-50%, -50%) scale(1)';
