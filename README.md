@@ -2,36 +2,38 @@
 
 **Sınıf içi İngilizce kelime oyunu** — akıllı tahta + öğretmen telefonu, gerçek zamanlı.
 
-Ortaokul İngilizce dersi için sınıf içi, gerçek zamanlı bir yarışma. Sınıf iki gruba (A ve B) ayrılır.
-Her grubun bir fare karakteri vardır ve amaçları yolun sonundaki kafeste hapsolmuş arkadaşlarını ve lezzetli peyniri kurtarmaktır.
+Ortaokul İngilizce dersleri için tasarlanmış, sınıf içi ve gerçek zamanlı interaktif bir yarışma uygulamasıdır. Sınıf iki gruba (A ve B) ayrılır.
+Her grubun bir fare karakteri vardır ve amaçları yoldaki peynirleri toplayarak, yolun sonundaki kafeste hapsolmuş arkadaşlarını kurtarmaktır.
 
-Her turda aktif gruba bir kelime (görsel) gösterilir. Öğrenci kelimenin İngilizcesini söyler, öğretmen telefonundan "doğru / yanlış" olarak değerlendirir.
-Doğru cevap fareyi bir adım ilerletir. Yanlış cevap verdiğinde ise pusuda bekleyen sinsi kedi ortaya çıkar, fareyi korkutur ve fare olduğu yerde kalır (puan kazanamaz). 
-Yolun sonundaki kafese ulaşan ilk grup oyunu kazanır.
+## 🎯 Temel Oyun Dinamikleri
+- **Kıvrımlı Yollar:** Fareler dümdüz gitmek yerine, süzülen adımlarla sinüs dalgası şeklinde kıvrımlı yollardan ilerler.
+- **Peynir Toplama:** Doğru cevap veren fare, yol üzerindeki durağına (peynire) ulaşır. Peyniri yediğinde keyifli konuşma balonları ("Yummy!", "Tasty!", "Delish!") çıkar.
+- **Kedi - Fare Kovalamacası:** Yanlış cevap verildiğinde grubun faresi geriye düşmez, olduğu yerde kalır. Ancak ekranda heyecanlı bir kovalamaca başlar! Sinsi bir kara kedi (🐈‍⬛) belirir. Faremiz geriye doğru kaçar, havada ninja taklası atarak kediden kurtulur ve yerine sağ salim döner. Bu sırada kilitli fare korkudan "Help me!!" diye bağırır.
+- **Büyük Buluşma (Oyun Sonu):** Yolun sonuna ulaşıldığında kafesin parmaklıkları kalkar ve kilit açılır. Kurtarılan arkadaş kafesten çıkar, iki fare yüz yüze gelir, aralarında bir "❤️" belirir ve sevinçten zıplamaya başlarlar!
 
-## Mimari (tamamen ücretsiz)
+## 🛠️ Mimari (Tamamen Ücretsiz)
 
 | Katman | Servis | Not |
 |---|---|---|
-| Hosting + API | **Vercel** (serverless) | Statik arayüz + sunucusuz fonksiyonlar |
-| Veri + görseller | **MongoDB Atlas** (M0) | Oyunlar, oda durumu ve görseller (base64) |
-| Senkron | **Polling** (~1.2 sn) | Tahta/telefon sunucuyu yoklar; ekstra servis yok |
+| Hosting + API | **Vercel** (serverless) | Statik arayüz + sunucusuz Node.js fonksiyonları |
+| Veri + görseller | **MongoDB Atlas** (M0) | Oyun durumları, puanlar ve görseller (base64) |
+| Senkronizasyon | **Polling** (~1.2 sn) | Tahta ve telefon sunucuyu düzenli yoklar; WebSocket/Socket.io gibi ekstra sunucu yükü gerektirmez |
 
-## 1. Kurulum
+## 🚀 1. Kurulum
 
 ```bash
 npm install
 export $(grep -v '^#' Vocab-Mice-atlas-credentials.env | xargs) && PORT=3001 npm run dev
 ```
 
-## 2. Ortam Değişkenleri
+## 🔐 2. Ortam Değişkenleri
 
-`Vocab-Mice-atlas-credentials.env` içine MongoDB URI adresinizi girmelisiniz.
+Uygulamanın çalışması için `Vocab-Mice-atlas-credentials.env` dosyası (veya canlıya alırken Vercel Environment Variables) içine MongoDB bağlantı adresinizi girmelisiniz.
 
-## 3. Akış
+## 🕹️ 3. İşleyiş ve Akış
 
-1. Öğretmen `/admin` panelinden yeni oyun açar, soru sayısı belirler ve kelime görsellerini yükler.
-2. Oluşan oyun kodunu akıllı tahtada (`/board/KOD`) ve telefonunda (`/moderate/KOD`) açar.
-3. Moderatör panelinden "Sıradaki Soruyu Göster" ile ekrana kelimeyi yansıtır.
-4. Grup cevaplar, öğretmen "Doğru" veya "Yanlış" butonuna basar.
-5. Kazanan çıkana kadar devam eder.
+1. **Yönetim Paneli (`/admin`):** Öğretmen yeni bir oyun oluşturur. Soru sayısı girmek yerine doğrudan kullanılacak kelime görsellerini galeriden **toplu olarak (çoklu seçimle)** işaretler (veya yeni görseller yükler). Soru havuzu otomatik belirlenir.
+2. **Akıllı Tahta (`/board/KOD`):** Öğrencilerin oyunu izleyeceği, yarışma animasyonlarının gösterildiği ana ekrandır.
+3. **Moderatör (`/moderate/KOD`):** Öğretmenin kendi telefonundan gizlice soruları ve skorları yönettiği kontrol panelidir.
+4. **Soru Sorma:** Moderatör panelinden "Sıradaki Soruyu Göster" ile ekrana seçili havuzdan rastgele bir kelime görseli yansıtılır.
+5. **Puanlama:** Sırası gelen grup kelimeyi söyler; öğretmen "Doğru" veya "Yanlış" butonuna basar ve şov (animasyonlar) başlar! Kazanan çıkana kadar süreç devam eder.

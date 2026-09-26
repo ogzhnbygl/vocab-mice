@@ -325,3 +325,11 @@ a { color: var(--accent); text-decoration: none; font-weight: 700; }
   .qst-points-num { font-size: 30px; }
   .judge-row .btn { font-size: 17px; padding: 18px 8px; }
 }
+
+@keyframes winJump {
+  0%, 100% { margin-top: 0px; }
+  50% { margin-top: -24px; }
+}
+.win-jump {
+  animation: winJump 0.4s ease-in-out infinite;
+}

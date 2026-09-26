@@ -154,6 +154,44 @@ async function playCatAnimation(teamIndex) {
   if (cageEl) showSpeechBubble(cageEl, 'Help me!!', 2500);
 }
 
+async function playWinAnimation(teamIndex, heroEl, cageEl) {
+  const friendImg = cageEl.querySelector('img');
+  
+  cageEl.classList.add('open');
+  showSpeechBubble(cageEl, 'Thank you!! ❤️', 2000);
+  
+  await new Promise(r => setTimeout(r, 800));
+  
+  heroEl.style.transition = 'left 0.6s ease-out, top 0.6s ease-out';
+  heroEl.style.left = 'calc(100% - 80px)';
+  heroEl.style.top = '50%';
+  
+  if (friendImg) {
+    friendImg.style.transition = 'transform 0.6s ease-out';
+    friendImg.style.transform = 'translateX(-60px) scaleX(-1)';
+  }
+  
+  await new Promise(r => setTimeout(r, 600));
+  
+  const heart = document.createElement('div');
+  heart.className = 'win-heart';
+  heart.textContent = '❤️';
+  heart.style.position = 'absolute';
+  heart.style.left = 'calc(100% - 40px)';
+  heart.style.top = '40%';
+  heart.style.fontSize = '40px';
+  heart.style.transform = 'translate(-50%, -50%) scale(0)';
+  heart.style.transition = 'transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+  heart.style.zIndex = '20';
+  document.getElementById(`track-path-${teamIndex}`).appendChild(heart);
+  
+  heart.offsetHeight; // force reflow
+  heart.style.transform = 'translate(-50%, -50%) scale(1)';
+  
+  heroEl.classList.add('win-jump');
+  if (friendImg) friendImg.classList.add('win-jump');
+}
+
 function render() {
   document.getElementById('game-name').textContent = state.name;
   document.getElementById('code').textContent = state.code;
@@ -237,27 +275,70 @@ function renderTracks() {
     const targetLeft = Math.min(t.score, maxSteps) / maxSteps * 100;
     const isMyTurn = (i === state.currentTeam && state.lastOpened == null && !state.finished);
 
+    const mouseEl = document.getElementById(`mouse-${i}`);
+    const cageEl = document.getElementById(`cage-${i}`);
+
     function updateCheeses(isImmediate = false) {
       let ateJustNow = false;
       for (let step = 1; step < maxSteps; step++) {
         const cheeseEl = document.getElementById(`cheese-${i}-${step}`);
         if (cheeseEl) {
           const eaten = t.score >= step;
-          if (eaten && cheeseEl.style.opacity !== "0" && cheeseEl.style.opacity !== "") {
-             ateJustNow = true;
-          }
+          if (eaten && cheeseEl.style.opacity !== "0" && cheeseEl.style.opacity !== "") ateJustNow = true;
           cheeseEl.style.transform = `translate(-50%, -50%) scale(${eaten ? 0 : 1})`;
           cheeseEl.style.opacity = eaten ? 0 : 1;
         }
       }
-      if (!isImmediate && ateJustNow) {
+      
+      if (!isImmediate && ateJustNow && t.score < maxSteps) {
         const words = ['Yummy!', 'Delish!', 'Tasty!'];
         const word = words[Math.floor(Math.random() * words.length)];
         showSpeechBubble(mouseEl, word);
       }
+      
+      if (t.score >= maxSteps) {
+        if (cageEl && !cageEl.classList.contains('open')) {
+          if (isImmediate) {
+            cageEl.classList.add('open');
+            if (mouseEl) {
+              mouseEl.style.left = 'calc(100% - 80px)';
+              mouseEl.style.top = '50%';
+              mouseEl.classList.add('win-jump');
+            }
+            const friendImg = cageEl.querySelector('img');
+            if (friendImg) {
+              friendImg.style.transform = 'translateX(-60px) scaleX(-1)';
+              friendImg.classList.add('win-jump');
+            }
+            
+            const heart = document.createElement('div');
+            heart.className = 'win-heart';
+            heart.textContent = '❤️';
+            heart.style.position = 'absolute';
+            heart.style.left = 'calc(100% - 40px)';
+            heart.style.top = '40%';
+            heart.style.fontSize = '40px';
+            heart.style.transform = 'translate(-50%, -50%) scale(1)';
+            heart.style.zIndex = '20';
+            document.getElementById(`track-path-${i}`).appendChild(heart);
+          } else {
+            playWinAnimation(i, mouseEl, cageEl);
+          }
+        }
+      } else {
+        if (cageEl) {
+           cageEl.classList.remove('open');
+           const friendImg = cageEl.querySelector('img');
+           if (friendImg) {
+              friendImg.style.transform = 'scaleX(-1)';
+              friendImg.classList.remove('win-jump');
+           }
+        }
+        if (mouseEl) mouseEl.classList.remove('win-jump');
+        document.getElementById(`track-path-${i}`).querySelectorAll('.win-heart').forEach(e => e.remove());
+      }
     }
 
-    const mouseEl = document.getElementById(`mouse-${i}`);
     if (mouseEl) {
       if (isMyTurn) mouseEl.classList.add('clickable-mouse');
       else mouseEl.classList.remove('clickable-mouse');
@@ -267,16 +348,10 @@ function renderTracks() {
       if (isNaN(currentTarget) || currentTarget !== targetLeft) {
          mouseEl.setAttribute('data-target', targetLeft);
          animateMouseTo(i, mouseEl, targetLeft, () => updateCheeses(false));
-         if (isNaN(currentTarget)) updateCheeses(true); // immediate on first load
+         if (isNaN(currentTarget)) updateCheeses(true); 
       } else {
          updateCheeses(true);
       }
-    }
-
-    const cageEl = document.getElementById(`cage-${i}`);
-    if (cageEl) {
-      if (t.score >= maxSteps) cageEl.classList.add('open');
-      else cageEl.classList.remove('open');
     }
   });
 }
