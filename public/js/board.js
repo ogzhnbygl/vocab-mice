@@ -9,7 +9,29 @@ let state = null;
 let lastSeq = null;
 let animationRequests = {};
 
-function animateMouseTo(i, mouseEl, targetLeft) {
+function showSpeechBubble(parentEl, text, duration = 2000) {
+  let bubble = parentEl.querySelector('.speech-bubble');
+  if (bubble) bubble.remove();
+
+  bubble = document.createElement('div');
+  bubble.className = 'speech-bubble';
+  bubble.textContent = text;
+  parentEl.appendChild(bubble);
+  
+  bubble.offsetHeight; // force reflow
+  bubble.classList.add('show');
+  
+  setTimeout(() => {
+    if (bubble.parentElement) {
+      bubble.classList.remove('show');
+      setTimeout(() => {
+        if (bubble.parentElement) bubble.remove();
+      }, 300);
+    }
+  }, duration);
+}
+
+function animateMouseTo(i, mouseEl, targetLeft, onComplete) {
   if (animationRequests[i]) cancelAnimationFrame(animationRequests[i]);
   
   const startLeft = parseFloat(mouseEl.style.left) || 0;
@@ -29,6 +51,8 @@ function animateMouseTo(i, mouseEl, targetLeft) {
     
     if (progress < 1) {
       animationRequests[i] = requestAnimationFrame(step);
+    } else if (onComplete) {
+      onComplete();
     }
   }
   animationRequests[i] = requestAnimationFrame(step);
@@ -56,28 +80,78 @@ function handleAction(a) {
   }
 }
 
-function playCatAnimation(teamIndex) {
+async function playCatAnimation(teamIndex) {
   vibrate([100, 50, 100]);
   const trackPath = document.getElementById(`track-path-${teamIndex}`);
   const mouseEl = document.getElementById(`mouse-${teamIndex}`);
   if (!trackPath || !mouseEl) return;
 
+  if (animationRequests[teamIndex]) {
+    cancelAnimationFrame(animationRequests[teamIndex]);
+    animationRequests[teamIndex] = null;
+  }
+
+  const startLeft = parseFloat(mouseEl.style.left || '0');
+  const escapeLeft = Math.max(0, startLeft - 20);
+  const escapeY = Math.sin((escapeLeft / 100) * Math.PI * 4) * 40;
+  
   const cat = document.createElement('div');
-  cat.className = 'cat-attack';
+  cat.className = 'cat-chaser';
   cat.textContent = '🐈‍⬛';
+  cat.style.position = 'absolute';
+  cat.style.fontSize = '60px';
+  cat.style.zIndex = '15';
+  cat.style.left = `${escapeLeft + 70}%`;
+  cat.style.top = `calc(50% + ${escapeY}%)`;
+  cat.style.transform = 'translate(-50%, -50%) scaleX(-1)'; // cat faces left usually, but scaleX ensures orientation
   trackPath.appendChild(cat);
   
-  // Mouse scare animation
-  mouseEl.classList.add('mouse-scared');
-
-  // Cat will attack up to where the mouse is
-  const mouseLeft = parseInt(mouseEl.style.left || '0', 10);
-  cat.style.setProperty('--attack-pos', `${mouseLeft}%`);
-
-  setTimeout(() => {
-    cat.remove();
-    mouseEl.classList.remove('mouse-scared');
-  }, 1500);
+  showSpeechBubble(mouseEl, '😱', 800);
+  const mouseImg = mouseEl.querySelector('img');
+  mouseEl.style.transition = 'transform 0.2s';
+  mouseEl.style.transform = 'translate(-50%, -50%) scale(1.2)';
+  
+  await new Promise(r => setTimeout(r, 400));
+  
+  mouseImg.style.transition = 'transform 0.1s';
+  mouseImg.style.transform = 'scaleX(-1)';
+  
+  mouseEl.style.transition = 'left 0.4s ease-out, top 0.4s ease-out';
+  mouseEl.style.left = `${escapeLeft}%`;
+  mouseEl.style.top = `calc(50% + ${escapeY}%)`;
+  
+  cat.offsetHeight; // force reflow
+  cat.style.transition = 'left 1s linear';
+  cat.style.left = `${escapeLeft - 30}%`;
+  
+  await new Promise(r => setTimeout(r, 550));
+  
+  mouseEl.style.transition = 'top 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.6s ease';
+  mouseEl.style.top = `calc(50% + ${escapeY - 50}%)`;
+  mouseEl.style.transform = 'translate(-50%, -50%) rotate(360deg)';
+  
+  await new Promise(r => setTimeout(r, 300));
+  
+  mouseEl.style.transition = 'top 0.3s cubic-bezier(0.8, 0.2, 1, 0.2)';
+  mouseEl.style.top = `calc(50% + ${escapeY}%)`;
+  
+  await new Promise(r => setTimeout(r, 450));
+  
+  cat.remove();
+  mouseImg.style.transform = 'scaleX(1)';
+  mouseEl.style.transform = 'translate(-50%, -50%) rotate(0deg)';
+  showSpeechBubble(mouseEl, 'Phew! 😅', 1500);
+  
+  const startY = Math.sin((startLeft / 100) * Math.PI * 4) * 40;
+  mouseEl.style.transition = 'left 0.8s ease-in-out, top 0.8s ease-in-out';
+  mouseEl.style.left = `${startLeft}%`;
+  mouseEl.style.top = `calc(50% + ${startY}%)`;
+  
+  await new Promise(r => setTimeout(r, 800));
+  
+  mouseEl.style.transition = ''; 
+  const cageEl = document.getElementById(`cage-${teamIndex}`);
+  if (cageEl) showSpeechBubble(cageEl, 'Help me!!', 2500);
 }
 
 function render() {
@@ -160,8 +234,28 @@ function renderTracks() {
 
   // Update DOM smartly
   state.teams.slice(0, 2).forEach((t, i) => {
-    const progress = Math.min(t.score, maxSteps) / maxSteps * 100;
+    const targetLeft = Math.min(t.score, maxSteps) / maxSteps * 100;
     const isMyTurn = (i === state.currentTeam && state.lastOpened == null && !state.finished);
+
+    function updateCheeses(isImmediate = false) {
+      let ateJustNow = false;
+      for (let step = 1; step < maxSteps; step++) {
+        const cheeseEl = document.getElementById(`cheese-${i}-${step}`);
+        if (cheeseEl) {
+          const eaten = t.score >= step;
+          if (eaten && cheeseEl.style.opacity !== "0" && cheeseEl.style.opacity !== "") {
+             ateJustNow = true;
+          }
+          cheeseEl.style.transform = `translate(-50%, -50%) scale(${eaten ? 0 : 1})`;
+          cheeseEl.style.opacity = eaten ? 0 : 1;
+        }
+      }
+      if (!isImmediate && ateJustNow) {
+        const words = ['Yummy!', 'Delish!', 'Tasty!'];
+        const word = words[Math.floor(Math.random() * words.length)];
+        showSpeechBubble(mouseEl, word);
+      }
+    }
 
     const mouseEl = document.getElementById(`mouse-${i}`);
     if (mouseEl) {
@@ -170,9 +264,12 @@ function renderTracks() {
       mouseEl.style.pointerEvents = isMyTurn ? 'auto' : 'none';
 
       const currentTarget = parseFloat(mouseEl.getAttribute('data-target'));
-      if (isNaN(currentTarget) || currentTarget !== progress) {
-         mouseEl.setAttribute('data-target', progress);
-         animateMouseTo(i, mouseEl, progress);
+      if (isNaN(currentTarget) || currentTarget !== targetLeft) {
+         mouseEl.setAttribute('data-target', targetLeft);
+         animateMouseTo(i, mouseEl, targetLeft, () => updateCheeses(false));
+         if (isNaN(currentTarget)) updateCheeses(true); // immediate on first load
+      } else {
+         updateCheeses(true);
       }
     }
 
@@ -180,15 +277,6 @@ function renderTracks() {
     if (cageEl) {
       if (t.score >= maxSteps) cageEl.classList.add('open');
       else cageEl.classList.remove('open');
-    }
-
-    for (let step = 1; step < maxSteps; step++) {
-      const cheeseEl = document.getElementById(`cheese-${i}-${step}`);
-      if (cheeseEl) {
-        const eaten = t.score >= step;
-        cheeseEl.style.transform = `translate(-50%, -50%) scale(${eaten ? 0 : 1})`;
-        cheeseEl.style.opacity = eaten ? 0 : 1;
-      }
     }
   });
 }
