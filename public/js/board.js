@@ -94,21 +94,29 @@ function renderTracks() {
       for (let step = 1; step < maxSteps; step++) {
         const left = (step / maxSteps) * 100;
         const yOffset = Math.sin((left / 100) * Math.PI * 4) * 40; // percent
-        cheeseStops += `<div id="cheese-${i}-${step}" class="cheese-stop" style="position:absolute; left:${left}%; top: calc(50% + ${yOffset}%); transform:translate(-50%, -50%) scale(1); opacity: 1; transition: all 0.5s ease; z-index:1;"></div>`;
+        cheeseStops += `<div id="cheese-${i}-${step}" class="cheese-stop" style="position:absolute; left:${left}%; top: calc(50% + ${yOffset}%); transform:translate(-50%, -50%) scale(1); opacity: 1; transition: all 0.5s ease; z-index:1;">
+          <img src="/img/cheese.svg" alt="Cheese">
+        </div>`;
+      }
+
+      let pathD = 'M 0 50';
+      for(let x = 1; x <= 100; x++) {
+        const y = 50 + Math.sin((x / 100) * Math.PI * 4) * 40;
+        pathD += ` L ${x} ${y}`;
       }
 
       return `
         <div class="track-wrapper">
           <div class="track-header" style="color: var(--team${i === 0 ? 'A' : 'B'})">${escapeHtml(t.name)}</div>
           <div class="track-path" id="track-path-${i}">
-            <svg width="100%" height="100%" style="position:absolute; top:0; left:0; z-index:0" preserveAspectRatio="none" viewBox="0 0 100 100">
-              <path d="M 0 50 Q 12.5 130, 25 50 T 50 50 T 75 50 T 100 50" fill="none" stroke="var(--line)" stroke-width="4" stroke-dasharray="8 8" vector-effect="non-scaling-stroke" />
+            <svg width="100%" height="100%" style="position:absolute; top:0; left:0; z-index:0; overflow:visible;" preserveAspectRatio="none" viewBox="0 0 100 100">
+              <path d="${pathD}" fill="none" stroke="var(--line)" stroke-width="4" stroke-dasharray="8 8" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round" />
             </svg>
             
             ${cheeseStops}
             
             <div id="cage-${i}" class="cage-stop" style="position:absolute; left:100%; top:50%; transform:translate(-50%, -50%); z-index:2;">
-              <img src="/img/cheese.svg" alt="Cheese">
+              <img src="/img/mouse-${i === 0 ? 'white' : 'black'}.svg" alt="Mouse">
             </div>
 
             <div class="mouse-char" id="mouse-${i}" 
