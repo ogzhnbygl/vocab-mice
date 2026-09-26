@@ -99,7 +99,7 @@ a { color: var(--accent); text-decoration: none; font-weight: 700; }
   flex: 1;
   background: rgba(255, 255, 255, 0.4);
   border-radius: 20px; border: 2px dashed var(--line);
-  padding: 20px 40px;
+  padding: 20px 70px;
   position: relative;
   display: flex; flex-direction: column;
 }
@@ -120,17 +120,27 @@ a { color: var(--accent); text-decoration: none; font-weight: 700; }
 .cage-stop {
   width: 140px; height: 140px; display: flex; align-items: center; justify-content: center;
   background: #334155; border-radius: 20px; border: 6px solid #1e293b; z-index: 2;
-  position: relative; padding: 20px;
+  position: absolute; padding: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+}
+.cage-stop::before {
+  content: ''; position: absolute; inset: 0;
+  background: repeating-linear-gradient(90deg, transparent, transparent 20px, #94a3b8 20px, #94a3b8 28px);
+  border-radius: 12px; pointer-events: none; z-index: 10;
+}
+.cage-stop.open::before {
+  display: none;
 }
 .cage-stop img { width: 100%; height: 100%; object-fit: contain; }
 .cage-stop::after {
-  content: '🔒'; position: absolute; font-size: 40px; top: -15px; right: -15px;
+  content: '🔒'; position: absolute; font-size: 26px; top: -15px; right: -15px; z-index: 11;
+  background: white; border-radius: 50%; width: 44px; height: 44px; 
+  display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.3);
 }
 .cage-stop.open::after { content: '🔓'; }
 
 .mouse-char {
   position: absolute; top: 50%; left: 0; transform: translate(-50%, -50%);
-  width: 120px; height: 120px; z-index: 5; transition: left 1s ease-in-out, top 1s ease-in-out;
+  width: 120px; height: 120px; z-index: 5;
 }
 .mouse-char img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3)); }
 

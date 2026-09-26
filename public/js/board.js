@@ -7,6 +7,32 @@ const questionImg = document.getElementById('question-img');
 
 let state = null;
 let lastSeq = null;
+let animationRequests = {};
+
+function animateMouseTo(i, mouseEl, targetLeft) {
+  if (animationRequests[i]) cancelAnimationFrame(animationRequests[i]);
+  
+  const startLeft = parseFloat(mouseEl.style.left) || 0;
+  const duration = 1000;
+  const startTime = performance.now();
+  
+  function step(time) {
+    const elapsed = time - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const ease = progress < 0.5 ? 4 * progress * progress * progress : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+    
+    const currentLeft = startLeft + (targetLeft - startLeft) * ease;
+    const currentY = Math.sin((currentLeft / 100) * Math.PI * 4) * 40;
+    
+    mouseEl.style.left = `${currentLeft}%`;
+    mouseEl.style.top = `calc(50% + ${currentY}%)`;
+    
+    if (progress < 1) {
+      animationRequests[i] = requestAnimationFrame(step);
+    }
+  }
+  animationRequests[i] = requestAnimationFrame(step);
+}
 
 const MOUSE_EMOJIS = ['🐁', '🐁'];
 
@@ -135,16 +161,19 @@ function renderTracks() {
   // Update DOM smartly
   state.teams.slice(0, 2).forEach((t, i) => {
     const progress = Math.min(t.score, maxSteps) / maxSteps * 100;
-    const mouseY = Math.sin((progress / 100) * Math.PI * 4) * 40;
     const isMyTurn = (i === state.currentTeam && state.lastOpened == null && !state.finished);
 
     const mouseEl = document.getElementById(`mouse-${i}`);
     if (mouseEl) {
-      mouseEl.style.left = `${progress}%`;
-      mouseEl.style.top = `calc(50% + ${mouseY}%)`;
       if (isMyTurn) mouseEl.classList.add('clickable-mouse');
       else mouseEl.classList.remove('clickable-mouse');
       mouseEl.style.pointerEvents = isMyTurn ? 'auto' : 'none';
+
+      const currentTarget = parseFloat(mouseEl.getAttribute('data-target'));
+      if (isNaN(currentTarget) || currentTarget !== progress) {
+         mouseEl.setAttribute('data-target', progress);
+         animateMouseTo(i, mouseEl, progress);
+      }
     }
 
     const cageEl = document.getElementById(`cage-${i}`);
